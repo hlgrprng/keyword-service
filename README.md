@@ -52,3 +52,4 @@ Result:
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
+Fork from https://git.fortiss.org/civitas-digitalis/CivDig-DigitalAssisstant/ai-services/keyword-service
