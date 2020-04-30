@@ -11,7 +11,7 @@ import json
 import csv
 import spacy
 
-nlp = spacy.load('de')
+nlp = spacy.load('de_core_news_sm')
 
 app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
