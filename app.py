@@ -23,6 +23,7 @@ CORS(app)
 def index():
     return "Hello, World!"
 
+nouns = {}
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 
 @app.route('/keywordList', methods=['GET'])
@@ -89,13 +90,22 @@ def getKeywordsSpacy(description):
     tokens = tokenizeDescription(description)
     doc = nlp(description)
     keywords = []
+    nouns = {}
     for token in doc:
         if (token.pos_ == "NOUN"):
             print(token.text + " " + token.pos_)
             if token.text not in keywords:
                 keywords.append(token.text)
-    print(keywords)
-    return keywords
+            if token.text in nouns:
+                nouns[token.text] = nouns[token.text] + 1
+            else:
+                nouns[token.text] = 1
+    results = nouns.keys()
+    values = [int(nouns[k]) for k in results]
+    results = [x for _,x in sorted(zip(values,results), reverse=True)]
+    #results = {k: v for k, v in sorted(nouns.items(), key=lambda item: item[1])}
+    print(results)
+    return results
 
 def tokenizeDescription(description):
     with open(app.config['STOPWORDS'], 'r') as f:
