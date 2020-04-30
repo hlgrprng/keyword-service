@@ -92,7 +92,8 @@ def getKeywordsSpacy(description):
     for token in doc:
         if (token.pos_ == "NOUN"):
             print(token.text + " " + token.pos_)
-            keywords.append(token.text)
+            if token.text not in keywords:
+                keywords.append(token.text)
     print(keywords)
     return keywords
 
