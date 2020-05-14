@@ -25,10 +25,37 @@ def index():
 
 nouns = {}
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
+scores = [{
+            "id": "82734",
+            "scores": {
+                "content": 48,
+                "response": 23,
+                "mutuality": 43,
+                "relevance": 22,
+                "sentiment": 80
+            }
+          },
+          {
+            "id": "82745",
+            "scores": {
+                "content": 48,
+                "response": 23,
+                "mutuality": 43,
+                "relevance": 22,
+                "sentiment": 80
+            }
+          }
+    	]
+
 
 @app.route('/keywordList', methods=['GET'])
 def get_keywords():
     return jsonify({'keywords': keywords})
+
+@app.route('/scores', methods=['POST'])
+def get_scores():
+    print(scores)
+    return jsonify({'results': scores})
 
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
