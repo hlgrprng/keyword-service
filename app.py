@@ -54,6 +54,14 @@ results = [{
 
 @app.route('/nlp-services', methods=['POST'])
 def get_nlp():
+    return request.json
+
+@app.route('/keywordList', methods=['GET'])
+def get_keywords():
+    return jsonify({'keywords': keywords})
+
+@app.route('/scores', methods=['POST'])
+def get_scores():
     if not request.json or not 'documents' in request.json or not 'configuration' in request.json:
         abort(400)
     documents = request.json['documents']
@@ -65,6 +73,10 @@ def get_nlp():
         relevance = randint(0, 100)
         sentiment = randint(0, 100)
         id = document.get('id')
+        tags = document.get('tags')
+        print(tags)
+        description = document.get('description')
+        print(description)
         scores = {
             "content": content,
             "response": response,
@@ -74,16 +86,6 @@ def get_nlp():
         }
         result = {"id" : id , "scores" : scores}
         results.append(result)
-    return jsonify({'results': results})
-    return request.json
-
-@app.route('/keywordList', methods=['GET'])
-def get_keywords():
-    return jsonify({'keywords': keywords})
-
-@app.route('/scores', methods=['POST'])
-def get_scores():
-    get_nlp()
     return jsonify({'results': results})
 
 @app.route('/keywords', methods=['POST'])
