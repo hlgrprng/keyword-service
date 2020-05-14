@@ -6,6 +6,8 @@ from flask import request
 from flask import abort
 from flask_cors import CORS
 from nltk.tokenize import RegexpTokenizer
+from random import seed
+from random import randint
 import requests
 import json
 import csv
@@ -17,6 +19,9 @@ app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
 CORS(app)
 
+# seed random number generator
+seed(1)
+
 #app.config['JSON_AS_ASCII'] = False
 
 @app.route('/')
@@ -25,7 +30,7 @@ def index():
 
 nouns = {}
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
-scores = [{
+results = [{
             "id": "82734",
             "scores": {
                 "content": 48,
@@ -47,6 +52,30 @@ scores = [{
           }
     	]
 
+@app.route('/nlp-services', methods=['POST'])
+def get_nlp():
+    if not request.json or not 'documents' in request.json or not 'configuration' in request.json:
+        abort(400)
+    documents = request.json['documents']
+    results = []
+    for document in documents:
+        content = randint(0, 100)
+        response = randint(0, 100)
+        mutuality = randint(0, 100)
+        relevance = randint(0, 100)
+        sentiment = randint(0, 100)
+        id = document.get('id')
+        scores = {
+            "content": content,
+            "response": response,
+            "mutuality": mutuality,
+            "relevance": relevance,
+            "sentiment": sentiment
+        }
+        result = {"id" : id , "scores" : scores}
+        results.append(result)
+    return jsonify({'results': results})
+    return request.json
 
 @app.route('/keywordList', methods=['GET'])
 def get_keywords():
@@ -54,8 +83,8 @@ def get_keywords():
 
 @app.route('/scores', methods=['POST'])
 def get_scores():
-    print(scores)
-    return jsonify({'results': scores})
+    get_nlp()
+    return jsonify({'results': results})
 
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
