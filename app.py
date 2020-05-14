@@ -72,20 +72,28 @@ def get_scores():
         mutuality = randint(0, 100)
         relevance = randint(0, 100)
         sentiment = randint(0, 100)
-        id = document.get('id')
-        tags = document.get('tags')
-        print(tags)
-        description = document.get('description')
-        print(description)
-        scores = {
-            "content": content,
-            "response": response,
-            "mutuality": mutuality,
-            "relevance": relevance,
-            "sentiment": sentiment
-        }
-        result = {"id" : id , "scores" : scores}
-        results.append(result)
+        if document.get('id'):
+            id = document.get('id')
+            if document.get('tags'):
+                tags = document.get('tags')
+                print(tags)
+            elif document.get('description') :
+                description = document.get('description')
+                print(description)
+            else:
+                abort(400)
+            scores = {
+                "content": content,
+                "response": response,
+                "mutuality": mutuality,
+                "relevance": relevance,
+                "sentiment": sentiment
+            }
+            result = {"id" : id , "scores" : scores}
+            results.append(result)
+        else:
+            abort(400)
+
     return jsonify({'results': results})
 
 @app.route('/keywords', methods=['POST'])
