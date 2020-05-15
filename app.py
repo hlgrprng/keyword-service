@@ -62,7 +62,7 @@ def get_keywords():
 
 @app.route('/scores', methods=['POST'])
 def get_scores():
-    if not request.json or not 'documents' in request.json or not 'configuration' in request.json:
+    if not request.json or not 'documents' in request.json:
         abort(400)
     documents = request.json['documents']
     results = []
