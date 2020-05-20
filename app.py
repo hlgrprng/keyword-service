@@ -77,8 +77,8 @@ def get_scores():
             if document.get('tags'):
                 tags = document.get('tags')
                 print(tags)
-            elif document.get('description') :
-                description = document.get('description')
+            elif document.get('body') :
+                description = document.get('body')
                 print(description)
             else:
                 abort(400)
