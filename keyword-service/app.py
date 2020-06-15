@@ -30,6 +30,7 @@ def index():
 
 nouns = {}
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
+wordcloud = "https://mfltricks.files.wordpress.com/2012/04/tagxedo_1.png"
 results = [{
             "id": "82734",
             "scores": {
@@ -51,6 +52,20 @@ results = [{
             }
           }
     	]
+clustering = [{
+			"title": "Fahrradverkehr",
+			"ids": ["253", "4335", "223", "2524"]
+		},
+		{
+			"title": "Offentlicher Nahverkehr",
+			"ids": ["253", "252", "25364"]
+		},
+		{
+			"title": "Anbindung Ubahn Innenstadt",
+			"ids": ["283", "435", "2233", "22533", "25534"]
+		}
+	]
+
 
 @app.route('/nlp-services', methods=['POST'])
 def get_nlp():
@@ -95,6 +110,51 @@ def get_scores():
             abort(400)
 
     return jsonify({'results': results})
+
+@app.route('/wordcloud', methods=['POST'])
+def get_wordcloud():
+    if not request.json or not 'documents' in request.json :
+        abort(400)
+    documents = request.json['documents']
+    results = []
+    for document in documents:
+        if document.get('id'):
+            id = document.get('id')
+            if document.get('tags'):
+                tags = document.get('tags')
+                print(tags)
+            elif document.get('body') :
+                description = document.get('body')
+                print(description)
+            else:
+                abort(400)
+        else:
+            abort(400)
+
+    return jsonify({'url': wordcloud})
+
+
+@app.route('/clustering', methods=['POST'])
+def get_cluster():
+    if not request.json or not 'documents' in request.json :
+        abort(400)
+    documents = request.json['documents']
+    results = []
+    for document in documents:
+        if document.get('id'):
+            id = document.get('id')
+            if document.get('tags'):
+                tags = document.get('tags')
+                print(tags)
+            elif document.get('body') :
+                description = document.get('body')
+                print(description)
+            else:
+                abort(400)
+        else:
+            abort(400)
+
+    return jsonify({'results': clustering})
 
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
