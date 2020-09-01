@@ -8,10 +8,16 @@ from flask_cors import CORS
 from nltk.tokenize import RegexpTokenizer
 from random import seed
 from random import randint
+from random import sample
 import requests
 import json
 import csv
 import spacy
+
+from os import path
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+import matplotlib.pyplot as plt
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -21,6 +27,42 @@ CORS(app)
 
 # seed random number generator
 seed(1)
+
+class Post:
+    id = '123'
+    title = ""
+    post = ""
+    sentences = []
+    summary = ""
+    text = ""
+    category = {}
+    cluster = ""
+    keywords = []
+    nouns = {}
+    persons = {}
+    locations = {}
+    geo = []
+    sentiment = 0
+    sentiPositive = 0
+    sentiNegative = 0
+    sentiments = []
+
+    relevance = 0
+    content = 0
+    response = 0
+    mutuality = 0
+
+    likes = 0
+    comments = 0
+
+    def __init__(self, id, title, post):
+        self.id = id
+        self.title = title
+        self.post = post
+
+    def addCategory(self, category):
+        self.category = category
+
 
 #app.config['JSON_AS_ASCII'] = False
 
@@ -117,6 +159,7 @@ def get_wordcloud():
         abort(400)
     documents = request.json['documents']
     results = []
+    text = ""
     for document in documents:
         if document.get('id'):
             id = document.get('id')
@@ -125,6 +168,7 @@ def get_wordcloud():
                 print(tags)
             elif document.get('body') :
                 description = document.get('body')
+                text = text + description
                 print(description)
             else:
                 abort(400)
@@ -139,22 +183,35 @@ def get_cluster():
     if not request.json or not 'documents' in request.json :
         abort(400)
     documents = request.json['documents']
+    configuration = request.json['configuration']
+    clusterCount = int(configuration.get('clusterCount'))
+    print(clusterCount)
     results = []
+    num = 10
+    posts = []
     for document in documents:
+        post = Post
         if document.get('id'):
             id = document.get('id')
+            print(id)
+            title = document.get('title')
             if document.get('tags'):
                 tags = document.get('tags')
                 print(tags)
             elif document.get('body') :
                 description = document.get('body')
                 print(description)
+                tags = jsonify(getKeywordsSpacy(description)[:num]), 201
+                print(list(tags))
+                post = Post(id, title, list(tags))
+                print(post)
+                posts.append(post)
             else:
                 abort(400)
         else:
             abort(400)
-
-    return jsonify({'results': clustering})
+        getCluster(posts, clusterCount)
+    return jsonify(getCluster(posts, clusterCount))
 
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
@@ -176,6 +233,27 @@ def suggest_keywords():
 #    		return jsonify(getKeywordsLeipzig(description)[:num]), 201
     else:
         abort(400)
+
+def getCluster(posts, clusterCount):
+
+    postlist = []
+    for post in posts:
+        print(post.id)
+        postlist.append(post.id)
+    print(postlist)
+    print(len(postlist))
+    i = 0
+    title = ""
+    ids = []
+    clusters = []
+    while i < clusterCount:
+        i += 1
+        title = "Clustertitle"+str(i)
+        ids = sample(postlist, len(postlist))
+        cluster = {"title" : title, "ids" : ids }
+        clusters.append(cluster)
+    return clusters
+
 
 def getKeywordsDBPedia(description):
     tokens = tokenizeDescription(description)
