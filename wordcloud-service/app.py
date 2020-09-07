@@ -96,7 +96,7 @@ def get_wordcloud():
         else:
             abort(400)
 
-    return jsonify({'url': getWordcloud(posts, num)})
+    return jsonify({'results': getWordcloud(posts, num)})
 
 @app.route('/wordcloud.png')
 def get_image():
