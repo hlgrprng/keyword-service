@@ -58,50 +58,6 @@ keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 wordcloud = "http://194.95.76.31:10004/get_image"
 
 
-@app.route('/nlp-services', methods=['POST'])
-def get_nlp():
-    return request.json
-
-@app.route('/keywordList', methods=['GET'])
-def get_keywords():
-    return jsonify({'keywords': keywords})
-
-@app.route('/scores', methods=['POST'])
-def get_scores():
-    if not request.json or not 'documents' in request.json :
-        abort(400)
-    documents = request.json['documents']
-    results = []
-    for document in documents:
-        content = randint(0, 100)
-        response = randint(0, 100)
-        mutuality = randint(0, 100)
-        relevance = randint(0, 100)
-        sentiment = randint(0, 100)
-        if document.get('id'):
-            id = document.get('id')
-            if document.get('tags'):
-                tags = document.get('tags')
-                print(tags)
-            elif document.get('body') :
-                description = document.get('body')
-                print(description)
-            else:
-                abort(400)
-            scores = {
-                "content": content,
-                "response": response,
-                "mutuality": mutuality,
-                "relevance": relevance,
-                "sentiment": sentiment
-            }
-            result = {"id" : id , "scores" : scores}
-            results.append(result)
-        else:
-            abort(400)
-
-    return jsonify({'results': results})
-
 @app.route('/wordcloud', methods=['POST'])
 def get_wordcloud():
 
