@@ -98,7 +98,7 @@ def get_wordcloud():
 
     return jsonify({'url': getWordcloud(posts, num)})
 
-@app.route('/get_image')
+@app.route('/get_image.png')
 def get_image():
     filename = 'cloud_001.png'
     return send_file(filename, mimetype='image/png')
