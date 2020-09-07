@@ -111,7 +111,7 @@ def get_wordcloud():
         abort(400)
     configuration = request.json['configuration']
     num = int(configuration.get('num'))
-    print("Number of words in Wordcloud " + str(num))
+    print("System - Number of words in Wordcloud " + str(num))
 
     if not request.json or not 'documents' in request.json :
         abort(400)
@@ -148,46 +148,6 @@ def get_image():
     filename = 'cloud_001.png'
     return send_file(filename, mimetype='image/png')
 
-@app.route('/clustering', methods=['POST'])
-def get_cluster():
-
-    if not request.json or not 'configuration' in request.json :
-        abort(400)
-    configuration = request.json['configuration']
-    clusterCount = int(configuration.get('clusterCount'))
-    print(clusterCount)
-
-    if not request.json or not 'documents' in request.json :
-        abort(400)
-
-    documents = request.json['documents']
-    results = []
-    num = 10
-    posts = []
-    for document in documents:
-        post = Post
-        if document.get('id'):
-            id = document.get('id')
-            print(id)
-            title = document.get('title')
-            if document.get('tags'):
-                tags = document.get('tags')
-                print(tags)
-            elif document.get('body') :
-                description = document.get('body')
-                print(description)
-                tags = jsonify(getKeywordsSpacy(description)[:num]), 201
-                print(list(tags))
-                post = Post(id, title, list(tags))
-                print(post)
-                posts.append(post)
-            else:
-                abort(400)
-        else:
-            abort(400)
-        getCluster(posts, clusterCount)
-    return jsonify(getCluster(posts, clusterCount))
-
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
     if not request.json or not 'description' in request.json or not 'mode' in request.json:
@@ -212,14 +172,15 @@ def suggest_keywords():
 
 def getWordcloud(posts, num):
     postbody = ""
-
     for post in posts:
-        print(post.id)
-        print(post.post)
+        #print(post.id)
+        #print(post.post)
         for word in post.post:
-            print(word)
-            postbody = postbody + " " + word
+            #print(word)
+            postbody = postbody + word + " "
 
+    print("System - String collection for wordcloud complete")
+    print(postbody)
     wordcloud_png = WordCloud(background_color="white", max_words=num, max_font_size=100, random_state=45, width=600, height=600, margin=8,).generate(postbody)
     # Display the generated image:
     try:
@@ -235,6 +196,7 @@ def getWordcloud(posts, num):
         #print(postlist)
         #print(len(postlist))
 
+    print("System - Wordcloud available under http://194.95.76.31:10004/get_image")
     return wordcloud
 
 def getKeywordsSpacy(description):
