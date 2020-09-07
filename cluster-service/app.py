@@ -83,21 +83,6 @@ def index():
 
 nouns = {}
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
-wordcloud = "https://mfltricks.files.wordpress.com/2012/04/tagxedo_1.png"
-clustering = [{
-			"title": "Fahrradverkehr",
-			"ids": ["253", "4335", "223", "2524"]
-		},
-		{
-			"title": "Offentlicher Nahverkehr",
-			"ids": ["253", "252", "25364"]
-		},
-		{
-			"title": "Anbindung Ubahn Innenstadt",
-			"ids": ["283", "435", "2233", "22533", "25534"]
-		}
-	]
-
 
 @app.route('/clustering', methods=['POST'])
 def get_cluster():
@@ -136,7 +121,7 @@ def get_cluster():
         else:
             abort(400)
 
-    return jsonify({'url': getCluster(posts, clusterCount)})
+    return jsonify({'results': getCluster(posts, clusterCount)})
 
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
