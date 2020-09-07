@@ -55,7 +55,7 @@ nouns = {}
 document = "Eine Erhol-Oase mit einem zentralen Brunnen und einer steinernen Bank drumrum, auf welcher man verweilen kann. Außerdem gibt es ein bachartiges Gewässer außenrum und Steinplatten, über die man die Wasserflächen queren kann. In den Wasserbecken soll es Fische und Wasserpflanzen geben."
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 #wordcloud = "http://mfltricks.files.wordpress.com/2012/04/tagxedo_1.png"
-wordcloud = "http://194.95.76.31:10004/get_image"
+wordcloud = "http://194.95.76.31:10004/wordcloud.png"
 
 @app.route('/wordcloud', methods=['POST'])
 def get_wordcloud():
@@ -98,7 +98,7 @@ def get_wordcloud():
 
     return jsonify({'url': getWordcloud(posts, num)})
 
-@app.route('/get_image.png')
+@app.route('/wordcloud.png')
 def get_image():
     filename = 'cloud_001.png'
     return send_file(filename, mimetype='image/png')
