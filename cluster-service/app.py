@@ -14,6 +14,17 @@ import json
 import csv
 import spacy
 
+from sklearn.decomposition import NMF, LatentDirichletAllocation, TruncatedSVD
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.manifold import TSNE
+import concurrent.futures
+import time
+import pyLDAvis.sklearn
+from pylab import bone, pcolor, colorbar, plot, show, rcParams, savefig
+import warnings
+warnings.filterwarnings('ignore')
+
 from os import path
 from PIL import Image
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
@@ -73,27 +84,6 @@ def index():
 nouns = {}
 keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 wordcloud = "https://mfltricks.files.wordpress.com/2012/04/tagxedo_1.png"
-results = [{
-            "id": "82734",
-            "scores": {
-                "content": 48,
-                "response": 23,
-                "mutuality": 43,
-                "relevance": 22,
-                "sentiment": 80
-            }
-          },
-          {
-            "id": "82745",
-            "scores": {
-                "content": 48,
-                "response": 23,
-                "mutuality": 43,
-                "relevance": 22,
-                "sentiment": 80
-            }
-          }
-    	]
 clustering = [{
 			"title": "Fahrradverkehr",
 			"ids": ["253", "4335", "223", "2524"]
@@ -109,114 +99,44 @@ clustering = [{
 	]
 
 
-@app.route('/nlp-services', methods=['POST'])
-def get_nlp():
-    return request.json
-
-@app.route('/keywordList', methods=['GET'])
-def get_keywords():
-    return jsonify({'keywords': keywords})
-
-@app.route('/scores', methods=['POST'])
-def get_scores():
-    if not request.json or not 'documents' in request.json :
-        abort(400)
-    documents = request.json['documents']
-    results = []
-    for document in documents:
-        content = randint(0, 100)
-        response = randint(0, 100)
-        mutuality = randint(0, 100)
-        relevance = randint(0, 100)
-        sentiment = randint(0, 100)
-        if document.get('id'):
-            id = document.get('id')
-            if document.get('tags'):
-                tags = document.get('tags')
-                print(tags)
-            elif document.get('body') :
-                description = document.get('body')
-                print(description)
-            else:
-                abort(400)
-            scores = {
-                "content": content,
-                "response": response,
-                "mutuality": mutuality,
-                "relevance": relevance,
-                "sentiment": sentiment
-            }
-            result = {"id" : id , "scores" : scores}
-            results.append(result)
-        else:
-            abort(400)
-
-    return jsonify({'results': results})
-
-@app.route('/wordcloud', methods=['POST'])
-def get_wordcloud():
-    if not request.json or not 'documents' in request.json :
-        abort(400)
-    documents = request.json['documents']
-    results = []
-    text = ""
-    for document in documents:
-        if document.get('id'):
-            id = document.get('id')
-            if document.get('tags'):
-                tags = document.get('tags')
-                print(tags)
-            elif document.get('body') :
-                description = document.get('body')
-                text = text + description
-                print(description)
-            else:
-                abort(400)
-        else:
-            abort(400)
-
-    return jsonify({'url': wordcloud})
-
-
 @app.route('/clustering', methods=['POST'])
 def get_cluster():
+    clusterCount = 3
 
     if not request.json or not 'configuration' in request.json :
         abort(400)
     configuration = request.json['configuration']
     clusterCount = int(configuration.get('clusterCount'))
-    print(clusterCount)
+    print("System - Number of clusters " + str(clusterCount))
 
     if not request.json or not 'documents' in request.json :
         abort(400)
 
     documents = request.json['documents']
-    results = []
-    num = 10
     posts = []
     for document in documents:
         post = Post
         if document.get('id'):
             id = document.get('id')
-            print(id)
+            #print(id)
             title = document.get('title')
             if document.get('tags'):
                 tags = document.get('tags')
-                print(tags)
+                #print(tags)
             elif document.get('body') :
                 description = document.get('body')
-                print(description)
-                tags = jsonify(getKeywordsSpacy(description)[:num]), 201
-                print(list(tags))
-                post = Post(id, title, list(tags))
-                print(post)
+                #print(description)
+                tags = getKeywordsSpacy(description)
+                #print(list(tags))
+                post = Post(id, title, tags)
+                #print(post)
                 posts.append(post)
             else:
                 abort(400)
         else:
             abort(400)
-        getCluster(posts, clusterCount)
-    return jsonify(getCluster(posts, clusterCount))
+
+    return jsonify({'url': getCluster(posts, clusterCount)})
 
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
@@ -244,56 +164,89 @@ def getCluster(posts, clusterCount):
     postlist = []
     for post in posts:
         print(post.id)
-        postlist.append(post.id)
+        print(post.post)
+        cluster_keys = ' '.join(list(post.post))
+        postlist.append(cluster_keys)
     print(postlist)
     print(len(postlist))
-    i = 0
-    title = ""
-    ids = []
+
+    #vectorizer = CountVectorizer(min_df=5, max_df=0.9, stop_words='german', lowercase=True, token_pattern='[a-zA-Z\-][a-zA-Z\-]{2,}')
+    vectorizer = CountVectorizer(min_df=0.2, max_df=2.9, lowercase=False)
+    #vectorizer = TfidfVectorizer()
+    data_vectorized = vectorizer.fit_transform(postlist)
+    # 3 subtopics
+    NUM_TOPICS = clusterCount
+    lda = LatentDirichletAllocation(n_components=NUM_TOPICS, max_iter=15, learning_method='online',verbose=True)
+    data_lda = lda.fit_transform(data_vectorized)
+
+    nmf = NMF(n_components=NUM_TOPICS)
+    data_nmf = nmf.fit_transform(data_vectorized)
+    lsi = TruncatedSVD(n_components=NUM_TOPICS)
+    data_lsi = lsi.fit_transform(data_vectorized)
+
+    print("Topics")
+
+    topicmap = []
+    for index, topic in enumerate(lda.components_):
+        topics = [(vectorizer.get_feature_names()[i]) for i in topic.argsort()[-3:]]
+        topicmap.append(topics)
+        print(f'Top 5 words for Topic #{index}')
+        print([vectorizer.get_feature_names()[i] for i in topic.argsort()[-5:]])
+        print('\n')
+
     clusters = []
-    while i < clusterCount:
-        i += 1
-        title = "Clustertitle"+str(i)
-        ids = sample(postlist, len(postlist))
-        cluster = {"title" : title, "ids" : ids }
+    for topic in topicmap:
+        title = ""
+        print(topic)
+        for top in topic:
+            title = title + top + " "
+        cluster = {"title" : title, "ids" : getTopicIds(posts, topic)}
         clusters.append(cluster)
+
     return clusters
 
+def getTopicIds(posts, topics):
+    topicPosts = []
+    #print(topics)
+    for topic in topics:
+        for post in posts:
+            #print(post.id)
+            for word in post.post:
+                #print(topic)
+                if word == topic:
+                    #print(post.id)
+                    if post.id not in topicPosts:
+                        topicPosts.append(post.id)
+    return topicPosts
 
-def getKeywordsDBPedia(description):
-    tokens = tokenizeDescription(description)
-    keywords = set()
-    for token in tokens:
-        url = app.config['DBPEDIA'] + '?text=' + token + '&confidence=0.2&support=20'
-        headers = {'Accept': 'application/json',
-                    'Cache-Control': 'no-cache',
-                    'Postman-Token': '2349be62-ac5f-4e61-8b27-b01009f3e1d5'}
-        response = requests.get(url, headers=headers)
-        if 'Resources' in response.json():
-            keywords.add(token)
-    return list(keywords)
+def getWordcloud(posts, num):
+    postbody = ""
+    for post in posts:
+        #print(post.id)
+        #print(post.post)
+        for word in post.post:
+            #print(word)
+            postbody = postbody + word + " "
 
-def getKeywordsLeipzig(description):
-    tokens = tokenizeDescription(description)
-    keywords = set()
-    for token in tokens:
-        url = app.config['LEIPZIG'] + token
-        response = requests.get(url).json()
-        if len(response)>0:
-            keywords.add(token)
-    return list(keywords)
+    print("System - String collection for wordcloud complete")
+    print(postbody)
+    wordcloud_png = WordCloud(background_color="white", max_words=num, max_font_size=100, random_state=45, width=600, height=600, margin=8,).generate(postbody)
+    # Display the generated image:
+    try:
+        plt.rcParams['figure.figsize']=(25,20)
+        plt.imshow(wordcloud_png, interpolation='bilinear')
+        plt.axis("off")
+        plt.savefig('cloud_001.png')
+        #plt.show()
+    except Exception as e:
+        printc("<ERROR> Error, exception<reset>: {}".format(e))
+        # 1. The pil way (if you don't have matplotlib)
+        printc("<WARNING> Something went wrong with matplotlib, switching to PIL backend... (just showing the image, <red>not<reset> saving it!)")
+        #print(postlist)
+        #print(len(postlist))
 
-def getKeywordsInternal(description):
-    tokens = tokenizeDescription(description)
-    keywords = []
-    with open(app.config['KEYWORDS'], 'r') as f:
-        reader = csv.reader(f)
-        keywords = dict(reader)
-    results = keywords.keys()
-    results = list(set(results).intersection(tokens))
-    values = [int(keywords[k]) for k in results]
-    results = [x for _,x in sorted(zip(values,results), reverse=True)]
-    return results
+    print("System - Wordcloud available under http://194.95.76.31:10004/get_image")
+    return wordcloud
 
 def getKeywordsSpacy(description):
     tokens = tokenizeDescription(description)
@@ -325,4 +278,4 @@ def tokenizeDescription(description):
     return tokens
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=10001)
+    app.run(debug=True, host='0.0.0.0', port=10002)

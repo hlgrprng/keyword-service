@@ -57,7 +57,6 @@ keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 #wordcloud = "http://mfltricks.files.wordpress.com/2012/04/tagxedo_1.png"
 wordcloud = "http://194.95.76.31:10004/get_image"
 
-
 @app.route('/wordcloud', methods=['POST'])
 def get_wordcloud():
 
