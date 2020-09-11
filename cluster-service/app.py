@@ -155,38 +155,48 @@ def getCluster(posts, clusterCount):
     print(postlist)
     print(len(postlist))
 
-    #vectorizer = CountVectorizer(min_df=5, max_df=0.9, stop_words='german', lowercase=True, token_pattern='[a-zA-Z\-][a-zA-Z\-]{2,}')
-    vectorizer = CountVectorizer(min_df=0.2, max_df=2.9, lowercase=False)
-    #vectorizer = TfidfVectorizer()
-    data_vectorized = vectorizer.fit_transform(postlist)
-    # 3 subtopics
-    NUM_TOPICS = clusterCount
-    lda = LatentDirichletAllocation(n_components=NUM_TOPICS, max_iter=15, learning_method='online',verbose=True)
-    data_lda = lda.fit_transform(data_vectorized)
+    try:
+        vectorizer = CountVectorizer(min_df=0.2, max_df=2.9, lowercase=False)
+        #vectorizer = TfidfVectorizer()
+        data_vectorized = vectorizer.fit_transform(postlist)
+        # 3 subtopics
+        NUM_TOPICS = clusterCount
+        lda = LatentDirichletAllocation(n_components=NUM_TOPICS, max_iter=15, learning_method='online',verbose=True)
+        data_lda = lda.fit_transform(data_vectorized)
 
-    nmf = NMF(n_components=NUM_TOPICS)
-    data_nmf = nmf.fit_transform(data_vectorized)
-    lsi = TruncatedSVD(n_components=NUM_TOPICS)
-    data_lsi = lsi.fit_transform(data_vectorized)
+        nmf = NMF(n_components=NUM_TOPICS)
+        data_nmf = nmf.fit_transform(data_vectorized)
+        lsi = TruncatedSVD(n_components=NUM_TOPICS)
+        data_lsi = lsi.fit_transform(data_vectorized)
 
-    print("Topics")
+        print("Topics")
 
-    topicmap = []
-    for index, topic in enumerate(lda.components_):
-        topics = [(vectorizer.get_feature_names()[i]) for i in topic.argsort()[-3:]]
-        topicmap.append(topics)
-        print(f'Top 5 words for Topic #{index}')
-        print([vectorizer.get_feature_names()[i] for i in topic.argsort()[-5:]])
-        print('\n')
+        topicmap = []
+        for index, topic in enumerate(lda.components_):
+            topics = [(vectorizer.get_feature_names()[i]) for i in topic.argsort()[-3:]]
+            topicmap.append(topics)
+            print(f'Top 5 words for Topic #{index}')
+            print([vectorizer.get_feature_names()[i] for i in topic.argsort()[-5:]])
+            print('\n')
 
-    clusters = []
-    for topic in topicmap:
-        title = ""
-        print(topic)
-        for top in topic:
-            title = title + top + " "
-        cluster = {"title" : title, "ids" : getTopicIds(posts, topic)}
-        clusters.append(cluster)
+        clusters = []
+        for topic in topicmap:
+            title = ""
+            print(topic)
+            for top in topic:
+                title = title + top + " "
+            cluster = {"title" : title, "ids" : getTopicIds(posts, topic)}
+            clusters.append(cluster)
+
+    except Exception as e:
+        print("<ERROR> Error, exception<reset>: {}".format(e))
+        # 1. The pil way (if you don't have matplotlib)
+        print("<WARNING> Something went wrong with clustering")
+        clusters = []
+
+        #print(postlist)
+        #print(len(postlist))    #vectorizer = CountVectorizer(min_df=5, max_df=0.9, stop_words='german', lowercase=True, token_pattern='[a-zA-Z\-][a-zA-Z\-]{2,}')
+
 
     return clusters
 
