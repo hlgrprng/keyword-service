@@ -14,6 +14,8 @@ import requests
 import json
 import csv
 import spacy
+import time
+from datetime import datetime
 
 from os import path
 from PIL import Image
@@ -57,6 +59,14 @@ keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 #wordcloud = "http://mfltricks.files.wordpress.com/2012/04/tagxedo_1.png"
 wordcloud = "http://194.95.76.31:10004/wordcloud.png"
 
+@app.route('/wordcloud/<filename>')
+def get_image(filename):
+    #filename = 'cloud_001.png'
+    print(filename)
+    return send_file(filename, mimetype='image/png')
+
+
+
 @app.route('/wordcloud', methods=['POST'])
 def get_wordcloud():
 
@@ -98,11 +108,6 @@ def get_wordcloud():
 
     return jsonify({'url': getWordcloud(posts, num)})
 
-@app.route('/wordcloud.png')
-def get_image():
-    filename = 'cloud_001.png'
-    return send_file(filename, mimetype='image/png')
-
 @app.route('/keywords', methods=['POST'])
 def suggest_keywords():
     if not request.json or not 'description' in request.json or not 'mode' in request.json:
@@ -136,23 +141,26 @@ def getWordcloud(posts, num):
 
     print("System - String collection for wordcloud complete")
     print(postbody)
-    wordcloud_png = WordCloud(background_color="white", max_words=num, max_font_size=100, random_state=45, width=600, height=600, margin=8,).generate(postbody)
+    wordcloud_png = WordCloud(background_color="white", max_words=num, max_font_size=100, random_state=45, width=600, height=400, margin=4,).generate(postbody)
     # Display the generated image:
     try:
-        plt.rcParams['figure.figsize']=(25,20)
+        plt.rcParams['figure.figsize']=(7.5,5)
         plt.imshow(wordcloud_png, interpolation='bilinear')
         plt.axis("off")
-        plt.savefig('cloud_001.png')
+        timestr = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+        print(timestr)
+        wordcloud = 'cloud_'+ timestr +'.png'
+        plt.savefig(wordcloud)
         #plt.show()
+        wordcloud_url = "http://194.95.76.31:10004/wordcloud/" + wordcloud
+        print("System - Wordcloud available under " + wordcloud_url)
     except Exception as e:
-        printc("<ERROR> Error, exception<reset>: {}".format(e))
+        print("<ERROR> Error, exception<reset>: {}".format(e))
         # 1. The pil way (if you don't have matplotlib)
-        printc("<WARNING> Something went wrong with matplotlib, switching to PIL backend... (just showing the image, <red>not<reset> saving it!)")
+        print("<WARNING> Something went wrong with matplotlib, switching to PIL backend... (just showing the image, <red>not<reset> saving it!)")
         #print(postlist)
         #print(len(postlist))
-
-    print("System - Wordcloud available under http://194.95.76.31:10004/get_image")
-    return wordcloud
+    return wordcloud_url
 
 def getKeywordsSpacy(description):
     tokens = tokenizeDescription(description)
