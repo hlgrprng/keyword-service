@@ -88,6 +88,7 @@ keywords = ['Straße', 'Auto', 'Verkehr', 'Fahrrad', 'Schule']
 def get_cluster():
     clusterCount = 3
 
+    print(request.json)
     if not request.json or not 'configuration' in request.json :
         abort(400)
     configuration = request.json['configuration']
@@ -214,34 +215,6 @@ def getTopicIds(posts, topics):
                         topicPosts.append(post.id)
     return topicPosts
 
-def getWordcloud(posts, num):
-    postbody = ""
-    for post in posts:
-        #print(post.id)
-        #print(post.post)
-        for word in post.post:
-            #print(word)
-            postbody = postbody + word + " "
-
-    print("System - String collection for wordcloud complete")
-    print(postbody)
-    wordcloud_png = WordCloud(background_color="white", max_words=num, max_font_size=100, random_state=45, width=600, height=600, margin=8,).generate(postbody)
-    # Display the generated image:
-    try:
-        plt.rcParams['figure.figsize']=(25,20)
-        plt.imshow(wordcloud_png, interpolation='bilinear')
-        plt.axis("off")
-        plt.savefig('cloud_001.png')
-        #plt.show()
-    except Exception as e:
-        printc("<ERROR> Error, exception<reset>: {}".format(e))
-        # 1. The pil way (if you don't have matplotlib)
-        printc("<WARNING> Something went wrong with matplotlib, switching to PIL backend... (just showing the image, <red>not<reset> saving it!)")
-        #print(postlist)
-        #print(len(postlist))
-
-    print("System - Wordcloud available under http://194.95.76.31:10004/get_image")
-    return wordcloud
 
 def getKeywordsSpacy(description):
     tokens = tokenizeDescription(description)

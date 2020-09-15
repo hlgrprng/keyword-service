@@ -74,6 +74,8 @@ def get_wordcloud():
 
     if not request.json or not 'configuration' in request.json :
         abort(400)
+
+    print(request.json)
     configuration = request.json['configuration']
     num = int(configuration.get('num'))
     print("System - Number of words in Wordcloud " + str(num))

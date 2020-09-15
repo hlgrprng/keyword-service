@@ -121,6 +121,8 @@ def get_keywords():
 def get_scores():
     if not request.json or not 'documents' in request.json :
         abort(400)
+
+    print(request.json)
     documents = request.json['documents']
     results = []
     for document in documents:
